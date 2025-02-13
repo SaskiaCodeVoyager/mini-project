@@ -68,18 +68,18 @@ Route::get('/navigation', function () {
 
 
 // Halaman untuk Admin (hanya bisa diakses oleh admin)
-Route::get('/admin', function () {
-    // Cek apakah pengguna sudah login dan apakah mereka memiliki role 'admin'
-    $user = Auth::user();
+// Route::get('/admin', function () {
+//     // Cek apakah pengguna sudah login dan apakah mereka memiliki role 'admin'
+//     $user = Auth::user();
     
-    // Pastikan pengguna terdaftar dan memiliki role admin
-    if ($user && $user->role === 'admin') {
-        return view('admin.dashboard'); // Halaman khusus admin
-    } else {
-        // Redirect ke halaman lain jika bukan admin atau pengguna belum login
-        return redirect('/')->with('error', 'Anda tidak memiliki akses ke halaman ini.');
-    }
-});
+//     // Pastikan pengguna terdaftar dan memiliki role admin
+//     if ($user && $user->role === 'admin') {
+//         return view('admin.dashboard'); // Halaman khusus admin
+//     } else {
+//         // Redirect ke halaman lain jika bukan admin atau pengguna belum login
+//         return redirect('/')->with('error', 'Anda tidak memiliki akses ke halaman ini.');
+//     }
+// });
 
 // // Halaman untuk Member (hanya bisa diakses oleh member)
 // Route::get('/member', function () {
