@@ -69,5 +69,10 @@ public function izins()
     return $this->hasMany(Izin::class, 'id_user');
 }
 
+public function projects()
+{
+    return $this->hasMany(Izin::class, 'id_user');
+}
+
 
 }

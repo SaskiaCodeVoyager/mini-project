@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('jurnals', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('id_user')->onDelete('RESTRICT');
             $table->string('judul');
             $table->string('gambar');
             $table->text('deskripsi');

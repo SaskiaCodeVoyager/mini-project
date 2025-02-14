@@ -9,11 +9,12 @@ use Illuminate\Support\Facades\Auth;
 
 class AbsenController extends Controller
 {
-    // Menampilkan daftar absensi
+    // Menampilkan daftar absensi hanya untuk user yang sedang login
     public function index()
     {
-        $absens = Absen::with('user')->orderBy('tanggal', 'desc')->get();
-        $izins = Izin::with('user')->get();
+        $id_user = Auth::id();
+        $absens = Absen::with('user')->where('id_user', $id_user)->orderBy('tanggal', 'desc')->get();
+        $izins = Izin::with('user')->where('id_user', $id_user)->get();
 
         return view('absens.index', compact('absens', 'izins'));
     }
@@ -27,13 +28,12 @@ class AbsenController extends Controller
     // Menyimpan data absensi otomatis saat tombol "Absen Sekarang" ditekan
     public function store()
     {
-        $id_user = Auth::id(); // Ambil ID user yang sedang login
+        $id_user = Auth::id();
         
         if (!$id_user) {
             return redirect()->back()->with('error', 'Anda harus login untuk melakukan absen.');
         }
 
-        // Cek apakah user sudah izin untuk hari ini
         $existingIzin = Izin::where('id_user', $id_user)
                             ->whereDate('dari_tanggal', '<=', now()->toDateString())
                             ->whereDate('sampai_tanggal', '>=', now()->toDateString())
@@ -43,7 +43,6 @@ class AbsenController extends Controller
             return redirect()->back()->with('error', 'Anda tidak bisa absen karena sudah mengajukan izin.');
         }
 
-        // Cek apakah user sudah absen dalam 24 jam terakhir
         $lastAbsen = Absen::where('id_user', $id_user)
                           ->where('tanggal', now()->toDateString())
                           ->exists();
@@ -52,14 +51,10 @@ class AbsenController extends Controller
             return redirect()->back()->with('error', 'Anda hanya bisa melakukan absen sekali dalam sehari.');
         }
 
-        // Pastikan menggunakan waktu Asia/Jakarta
         $jamMasuk = now()->setTimezone('Asia/Jakarta')->format('H:i:s'); 
         $batasJamMasuk = '08:00:00';
-
-        // Tentukan keterangan (jika lebih dari jam 08:00, statusnya "alpa")
         $keterangan = ($jamMasuk > $batasJamMasuk) ? 'alpa' : 'masuk';
 
-        // Simpan absensi baru
         Absen::create([
             'id_user' => $id_user,
             'tanggal' => now()->toDateString(),
@@ -73,7 +68,7 @@ class AbsenController extends Controller
     // Menampilkan form edit absensi
     public function edit($id)
     {
-        $absen = Absen::with('user')->findOrFail($id);
+        $absen = Absen::with('user')->where('id_user', Auth::id())->findOrFail($id);
         return view('absens.edit', compact('absen'));
     }
 
@@ -86,12 +81,8 @@ class AbsenController extends Controller
             'absen_pulang' => 'nullable|date_format:H:i:s',
         ]);
 
-        $absen = Absen::findOrFail($id);
-        $absen->update([
-            'keterangan' => $request->keterangan,
-            'absen_masuk' => $request->absen_masuk,
-            'absen_pulang' => $request->absen_pulang,
-        ]);
+        $absen = Absen::where('id_user', Auth::id())->findOrFail($id);
+        $absen->update($request->only(['keterangan', 'absen_masuk', 'absen_pulang']));
 
         return redirect()->route('absens.index')->with('success', 'Absensi berhasil diperbarui.');
     }
@@ -99,7 +90,7 @@ class AbsenController extends Controller
     // Menghapus data absensi
     public function destroy($id)
     {
-        $absen = Absen::findOrFail($id);
+        $absen = Absen::where('id_user', Auth::id())->findOrFail($id);
         $absen->delete();
 
         return redirect()->back()->with('success', 'Absensi berhasil dihapus.');
