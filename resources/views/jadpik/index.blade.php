@@ -1,6 +1,25 @@
 @extends('layouts.app')
 
 @section('content')
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        .overflow-y-auto::-webkit-scrollbar {
+            width: 5px;
+        }
+        .overflow-y-auto::-webkit-scrollbar-thumb {
+            background-color: #888;
+            border-radius: 10px;
+        }
+    </style>    
+</head>
+<body>
+
 <div class="container mx-auto p-4">
     <h1 class="text-2xl font-semibold mb-4">Daftar Jadwal Piket</h1>
     @if(auth()->user()->role === 'admin')
@@ -15,25 +34,22 @@
         @foreach($haris as $hari)
             <div class="bg-white rounded-lg shadow-lg p-4">
                 <h2 class="text-xl font-semibold mb-4">{{ $hari->nama }}</h2>
-                @if($jadpiks->where('hari_id', $hari->id)->isEmpty())
+                @if($jadpiks[$hari->id]->isEmpty())
                     <p class="text-gray-500">Tidak ada jadwal piket.</p>
                 @else
-                    <div class="space-y-2">
-                        @foreach ($jadpiks->where('hari_id', $hari->id) as $index => $jadpik)
+                    <div class="overflow-y-auto max-h-64 space-y-2">
+                        @foreach ($jadpiks[$hari->id] as $jadpik)
                             <div class="flex items-center justify-between bg-gray-100 p-2 rounded">
-                                <div class="flex items-center">
-                                    {{-- <span class="mr-2 font-bold">{{ $index + 1 }}.</span> --}}
-                                    <span>{{ $jadpik->nama_siswa }}</span>
-                                </div>
+                                <span>{{ $jadpik->nama_siswa }}</span>
                                 @if(auth()->user()->role === 'admin')
-                                <div class="space-x-2">
-                                    <button class="bg-yellow-500 text-white px-3 py-1 rounded-md btn-edit" 
+                                <div class="flex space-x-4">
+                                    <button class="bg-yellow-500 text-white px-2 py-1 rounded-md btn-edit" 
                                         data-id="{{ $jadpik->id }}" 
                                         data-nama="{{ $jadpik->nama_siswa }}" 
                                         data-hari="{{ $jadpik->hari_id }}">
                                         Edit
                                     </button>
-                                    <button class="bg-red-500 text-white px-3 py-1 rounded-md btn-delete" 
+                                    <button class="bg-red-500 text-white px-2 py-1 rounded-md btn-delete" 
                                         data-id="{{ $jadpik->id }}">
                                         Hapus
                                     </button>
@@ -42,11 +58,15 @@
                             </div>
                         @endforeach
                     </div>
+                    <div class="mt-3">
+                        {{ $jadpiks[$hari->id]->links('pagination::tailwind') }}
+                    </div>
                 @endif
             </div>
         @endforeach
     </div>
 </div>
+
 @if(auth()->user()->role === 'admin')
 <!-- Modal Tambah Jadpik -->
 <div id="createModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center hidden">
@@ -164,5 +184,6 @@
     });
 </script>
 @endif
-
+</body>
+</html>
 @endsection

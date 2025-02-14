@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Jadpik;
 use App\Models\Hari;
+use Illuminate\Validation\Rule;
 
 class JadpikController extends Controller
 {
@@ -13,50 +14,72 @@ class JadpikController extends Controller
      */
     public function index()
     {
-        // Mengambil semua data hari dan jadpik
         $haris = Hari::all();
-        $jadpiks = Jadpik::all();
+        $jadpiks = [];
 
-        // Pastikan view yang digunakan sesuai dengan lokasi file Blade Anda, misalnya "jadpik.index"
+        foreach ($haris as $hari) {
+            $jadpiks[$hari->id] = Jadpik::where('hari_id', $hari->id)->paginate(2);
+        }
+
         return view('jadpik.index', compact('haris', 'jadpiks'));
     }
 
     /**
-     * Menyimpan data jadwal piket baru.
+     * Menyimpan data jadwal piket baru dengan validasi.
      */
     public function store(Request $request)
     {
-        // Validasi inputan
-        $validatedData = $request->validate([
-            'nama_siswa' => 'required|string|max:255',
-            'hari_id'    => 'required|exists:haris,id',
+        $request->validate([
+            'nama_siswa' => [
+                'required',
+                'max:255',
+                'regex:/^[A-Za-z\s.]+$/',
+                Rule::unique('jadpiks')->where(function ($query) use ($request) {
+                    return $query->where('hari_id', $request->hari_id);
+                })
+            ],
+            'hari_id' => 'required|exists:haris,id',
+        ], [
+            'nama_siswa.required' => 'Nama siswa harus diisi.',
+            'nama_siswa.max' => 'Nama siswa maksimal 255 karakter.',
+            'nama_siswa.regex' => 'Nama siswa hanya boleh mengandung huruf, spasi, dan titik.',
+            'nama_siswa.unique' => 'Nama siswa ini sudah terdaftar untuk hari yang sama.',
+            'hari_id.required' => 'Hari harus dipilih.',
+            'hari_id.exists' => 'Hari yang dipilih tidak valid.',
         ]);
 
-        // Membuat data jadpik baru
-        Jadpik::create($validatedData);
+        Jadpik::create($request->all());
 
-        // Redirect kembali dengan pesan sukses
         return redirect()->back()->with('success', 'Jadwal piket berhasil ditambahkan.');
     }
 
     /**
-     * Memperbarui data jadwal piket.
+     * Memperbarui data jadwal piket dengan validasi.
      */
     public function update(Request $request, $id)
     {
-        // Validasi inputan
-        $validatedData = $request->validate([
-            'nama_siswa' => 'required|string|max:255',
-            'hari_id'    => 'required|exists:haris,id',
+        $request->validate([
+            'nama_siswa' => [
+                'required',
+                'max:255',
+                'regex:/^[A-Za-z\s.]+$/',
+                Rule::unique('jadpiks')->where(function ($query) use ($request, $id) {
+                    return $query->where('hari_id', $request->hari_id)->where('id', '!=', $id);
+                })
+            ],
+            'hari_id' => 'required|exists:haris,id',
+        ], [
+            'nama_siswa.required' => 'Nama siswa harus diisi.',
+            'nama_siswa.max' => 'Nama siswa maksimal 255 karakter.',
+            'nama_siswa.regex' => 'Nama siswa hanya boleh mengandung huruf, spasi, dan titik.',
+            'nama_siswa.unique' => 'Nama siswa ini sudah terdaftar untuk hari yang sama.',
+            'hari_id.required' => 'Hari harus dipilih.',
+            'hari_id.exists' => 'Hari yang dipilih tidak valid.',
         ]);
 
-        // Mencari data jadpik berdasarkan id
         $jadpik = Jadpik::findOrFail($id);
+        $jadpik->update($request->all());
 
-        // Memperbarui data
-        $jadpik->update($validatedData);
-
-        // Redirect kembali dengan pesan sukses
         return redirect()->back()->with('success', 'Jadwal piket berhasil diperbarui.');
     }
 
@@ -65,13 +88,9 @@ class JadpikController extends Controller
      */
     public function destroy($id)
     {
-        // Mencari data jadpik berdasarkan id
         $jadpik = Jadpik::findOrFail($id);
-
-        // Menghapus data
         $jadpik->delete();
 
-        // Redirect kembali dengan pesan sukses
         return redirect()->back()->with('success', 'Jadwal piket berhasil dihapus.');
     }
 }
