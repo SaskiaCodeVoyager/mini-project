@@ -133,7 +133,9 @@
                 </div>
                 <div class="mb-2">
                     <label class="block font-semibold">Bukti</label>
-                    <img :src="selectedIzin.bukti_url" alt="Bukti" class="w-32 h-32 object-cover">
+                    <img :src="'{{ asset('storage') }}/' + selectedIzin.bukti" alt="Bukti Izin">
+
+
                 </div>
             </div>
 

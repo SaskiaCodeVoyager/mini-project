@@ -69,7 +69,7 @@ class JurnalController extends Controller
         }
 
         // Cek apakah waktu saat ini lebih dari jam 16:00
-        if ($currentTime->hour < 16) {
+        if ($currentTime->hour < 9) {
             return redirect()->route('jurnals.index')->with('error', 'Jurnal hanya bisa diisi setelah jam 16:00.');
         }
 

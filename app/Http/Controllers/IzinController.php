@@ -13,6 +13,9 @@ class IzinController extends Controller
     public function index()
     {
         $izins = Izin::with('user')->get();
+
+        
+
         return view('izin.index', compact('izins'));
     }
 

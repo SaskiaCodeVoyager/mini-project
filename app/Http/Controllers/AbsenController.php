@@ -15,6 +15,7 @@ class AbsenController extends Controller
         $id_user = Auth::id();
         $absens = Absen::with('user')->where('id_user', $id_user)->orderBy('tanggal', 'desc')->get();
         $izins = Izin::with('user')->where('id_user', $id_user)->get();
+        // dd($izins);
 
         return view('absens.index', compact('absens', 'izins'));
     }
