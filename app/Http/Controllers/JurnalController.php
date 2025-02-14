@@ -29,8 +29,8 @@ class JurnalController extends Controller
     // Jika belum ada jurnal dan waktu sudah lebih dari jam 00:00 (midnight), buat otomatis
     if (isEmpty($jurnalHariIni) && $today >= $customDate  ) {  // midnight condition is naturally after 00:00
         $jurnalHariIni = Jurnal::create([
-            'judul' => '',
-            'gambar' => 'default.jpg', // Pastikan ada gambar default di storage
+            'judul' => 'Kosong',
+            'gambar' => '', // Pastikan ada gambar default di storage
             'deskripsi' => 'Tidak ada jurnal yang diisi hari ini.',
         ]);
     }

@@ -28,7 +28,7 @@
             @foreach ($jurnals as $jurnal)
             <tr>
                 <td class="border p-2">{{ $jurnal->judul }}</td>
-                <td class="border p-2"><img src="{{ asset('storage/'.$jurnal->gambar) }}" class="w-20"/></td>
+                <td class="border p-2"><img src="{{ asset('storage/' . $jurnal->gambar) }}" alt="{{ $jurnal->judul }}" width="100"></td>
                 <td class="border p-2">{{ $jurnal->deskripsi }}</td>
                 <td class="border p-2">
                     {{ \Carbon\Carbon::parse($jurnal->created_at)->locale('id')->translatedFormat('l, d F Y') }}
