@@ -12,15 +12,15 @@
         </div>
     @endif
 
-     <!-- Display global validation errors -->
-     @if ($errors->any())
-     <div class="bg-red-500 text-white p-3 rounded-md mb-4">
-         <ul>
-             @foreach ($errors->all() as $error)
-                 <li>{{ $error }}</li>
-             @endforeach
-         </ul>
-     </div>
+    <!-- Display global validation errors -->
+    @if ($errors->any())
+        <div class="bg-red-500 text-white p-3 rounded-md mb-4">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
     @endif
 
     <table class="table-auto w-full mt-3 border border-gray-300">
@@ -28,6 +28,7 @@
             <tr class="bg-gray-100">
                 <th class="px-4 py-2 border">#</th>
                 <th class="px-4 py-2 border">Nama Tahap</th>
+                <th class="px-4 py-2 border">Deskripsi</th> <!-- Kolom untuk deskripsi -->
                 <th class="px-4 py-2 border">Aksi</th>
             </tr>
         </thead>
@@ -36,20 +37,19 @@
                 <tr class="hover:bg-gray-50">
                     <td class="px-4 py-2 border">{{ $loop->iteration }}</td>
                     <td class="px-4 py-2 border">{{ $tahap->nama }}</td>
+                    <td class="px-4 py-2 border">{{ $tahap->deskripsi }}</td> <!-- Menampilkan deskripsi -->
                     <td class="px-4 py-2 border">
-                        <!-- Tombol Edit untuk membuka modal edit -->
                         <button type="button" 
                                 class="bg-yellow-500 text-white px-4 py-2 rounded-md btn-edit" 
                                 data-id="{{ $tahap->id }}" 
-                                data-nama="{{ $tahap->nama }}">
+                                data-nama="{{ $tahap->nama }}"
+                                data-deskripsi="{{ $tahap->deskripsi }}">
                             Edit
                         </button>
 
-                        <!-- Tombol Hapus untuk membuka modal konfirmasi hapus -->
                         <button type="button" 
                                 class="bg-red-500 text-white px-4 py-2 rounded-md ml-2 btn-delete" 
                                 data-id="{{ $tahap->id }}">
-
                             Hapus
                         </button>
                     </td>
@@ -73,8 +73,16 @@
                        id="nama" 
                        name="nama" value="{{ old('nama', '') }}">
 
-                <!-- Show error if any for 'nama' -->
                 @error('nama')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div class="mb-4">
+                <label for="deskripsi" class="block text-sm font-medium text-gray-700">Deskripsi</label>
+                <textarea id="deskripsi" name="deskripsi" rows="3" class="mt-1 block w-full border-gray-300 rounded-md @error('deskripsi') border-red-500 @enderror">{{ old('deskripsi') }}</textarea>
+
+                @error('deskripsi')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
             </div>
@@ -86,7 +94,6 @@
         </form>
     </div>
 </div>
-
 
 <!-- Modal Edit Tahap -->
 <div class="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center hidden" id="editModal">
@@ -104,8 +111,16 @@
                        name="nama" 
                        required value="{{ old('nama') }}">
 
-                <!-- Show error if any for 'editNama' -->
                 @error('nama')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div class="mb-4">
+                <label for="editDeskripsi" class="block text-sm font-medium text-gray-700">Deskripsi</label>
+                <textarea id="editDeskripsi" name="deskripsi" rows="3" class="mt-1 block w-full border-gray-300 rounded-md @error('deskripsi') border-red-500 @enderror">{{ old('deskripsi', '') }}</textarea>
+
+                @error('deskripsi')
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
             </div>
@@ -117,7 +132,6 @@
         </form>
     </div>
 </div>
-
 
 <!-- Modal Konfirmasi Hapus Tahap -->
 <div class="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center hidden" id="deleteModal">
@@ -146,9 +160,11 @@
 
         // Buka modal edit dan isi data yang sesuai
         $('.btn-edit').click(function() {
-            let id   = $(this).data('id');
+            let id = $(this).data('id');
             let nama = $(this).data('nama');
+            let deskripsi = $(this).data('deskripsi');
             $('#editNama').val(nama);
+            $('#editDeskripsi').val(deskripsi);
             $('#editForm').attr('action', '/tahap/' + id);
             $('#editModal').removeClass('hidden');
         });

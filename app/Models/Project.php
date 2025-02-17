@@ -15,9 +15,9 @@ class Project extends Model
     {
         return $this->belongsTo(Tahap::class);
     }
-
-    public function user()
+    public function users()
     {
-        return $this->belongsTo(User::class, 'id_user');
+        return $this->belongsTo(User::class);
     }
+    
 }

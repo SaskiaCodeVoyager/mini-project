@@ -13,16 +13,18 @@ class JadpikController extends Controller
      * Menampilkan daftar jadwal piket beserta daftar hari.
      */
     public function index()
-    {
-        $haris = Hari::all();
-        $jadpiks = [];
+{
+    $haris = Hari::all();
+    $jadpiks = [];
 
-        foreach ($haris as $hari) {
-            $jadpiks[$hari->id] = Jadpik::where('hari_id', $hari->id)->paginate(2);
-        }
-
-        return view('jadpik.index', compact('haris', 'jadpiks'));
+    foreach ($haris as $hari) {
+        // Menggunakan pagination biasa di sini
+        $jadpiks[$hari->id] = Jadpik::where('hari_id', $hari->id)->paginate(10);
     }
+
+    return view('jadpik.index', compact('haris', 'jadpiks'));
+}
+
 
     /**
      * Menyimpan data jadwal piket baru dengan validasi.

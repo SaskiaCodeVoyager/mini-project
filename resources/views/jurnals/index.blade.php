@@ -2,43 +2,53 @@
 
 @section('content')
 <div class="container mx-auto p-4">
-    <h1 class="text-2xl font-bold mb-4">Daftar Jurnal</h1>
+    <!-- Alert Messages -->
+    @if (session('success'))
+        <div class="mb-4 p-4 bg-green-100 text-green-700 border border-green-300 rounded">
+            {{ session('success') }}
+        </div>
+    @elseif (session('error'))
+        <div class="mb-4 p-4 bg-red-100 text-red-700 border border-red-300 rounded">
+            {{ session('error') }}
+        </div>
+    @endif
+    
+    <h1 class="text-2xl font-bold mb-4 text-blue-900">Daftar Jurnal</h1>
     
     <!-- Tombol Tambah Jurnal -->
     <div class="mb-4 flex gap-2">
         <button 
             onclick="openModal('create')" 
-            class="bg-blue-500 text-white px-4 py-2 rounded"
+            class="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-600"
         >
             Tambah Jurnal
         </button>
     </div>
 
-    <table class="w-full border border-gray-300">
+    <table class="w-full border border-blue-200">
         <thead>
-            <tr class="bg-gray-100">
-                <th class="border p-2">Judul</th>
-                <th class="border p-2">Gambar</th>
-                <th class="border p-2">Deskripsi</th>
-                <th class="border p-2">Tanggal</th>
-                <th class="border p-2">Aksi</th>
+            <tr class="bg-blue-100">
+                <th class="border p-2 text-blue-900">Judul</th>
+                <th class="border p-2 text-blue-900">Gambar</th>
+                <th class="border p-2 text-blue-900">Deskripsi</th>
+                <th class="border p-2 text-blue-900">Tanggal</th>
+                <th class="border p-2 text-blue-900">Aksi</th>
             </tr>
         </thead>
         <tbody>
             @foreach ($jurnals as $jurnal)
-            <tr>
-                <td class="border p-2">{{ $jurnal->judul }}</td>
+            <tr class="bg-white hover:bg-blue-50">
+                <td class="border p-2 text-blue-700">{{ $jurnal->judul }}</td>
                 <td class="border p-2"><img src="{{ asset('storage/' . $jurnal->gambar) }}" alt="{{ $jurnal->judul }}" width="100"></td>
-                <td class="border p-2">{{ $jurnal->deskripsi }}</td>
-                <td class="border p-2">
+                <td class="border p-2 text-blue-700">{{ $jurnal->deskripsi }}</td>
+                <td class="border p-2 text-blue-700">
                     {{ \Carbon\Carbon::parse($jurnal->created_at)->locale('id')->translatedFormat('l, d F Y') }}
                 </td>
                 <td class="border p-2">
-                    <button onclick="openModal('show', {{ $jurnal }})" class="text-blue-500">Lihat</button>
-                    @if (now()->diffInDays($jurnal->created_at) <= 1)
-                        <button onclick="openModal('edit', {{ $jurnal }})" class="text-yellow-500">Edit</button>
+                    @if (now()->format('H:i:s') < '08:00:00' && now()->isSameDay($jurnal->created_at))
+                    <button onclick="openModal('edit', {{ $jurnal }})" class="text-yellow-500 hover:text-yellow-400">Edit</button>
                     @endif
-                    <button onclick="konfirmasiHapus({{ $jurnal->id }})" class="text-red-500">Hapus</button>
+                    <button onclick="konfirmasiHapus({{ $jurnal->id }})" class="text-red-500 hover:text-red-400">Hapus</button>
                 </td>
             </tr>
             @endforeach
@@ -49,8 +59,8 @@
 <!-- Modal Konfirmasi Hapus -->
 <div id="modalHapus" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
     <div class="bg-white p-6 rounded-lg shadow-lg w-96">
-        <h2 class="text-lg font-semibold mb-4">Konfirmasi Hapus</h2>
-        <p>Apakah Anda yakin ingin menghapus jurnal ini?</p>
+        <h2 class="text-lg font-semibold mb-4 text-blue-900">Konfirmasi Hapus</h2>
+        <p class="text-blue-700">Apakah Anda yakin ingin menghapus jurnal ini?</p>
         <div class="mt-4 flex justify-end">
             <button id="batalHapus" class="px-4 py-2 bg-gray-300 text-gray-700 rounded mr-2">Batal</button>
             <form id="formHapus" method="POST" action="">
@@ -65,14 +75,14 @@
 <!-- Modal -->
 <div id="modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center">
     <div class="bg-white p-6 rounded shadow-lg w-96">
-        <h2 id="modalTitle" class="text-lg font-bold mb-4"></h2>
+        <h2 id="modalTitle" class="text-lg font-bold mb-4 text-blue-900"></h2>
         <form id="modalForm" method="POST" enctype="multipart/form-data">
             @csrf
             <input type="hidden" name="_method" id="modalMethod">
             <div id="modalBody"></div>
             <div class="mt-4 flex justify-end">
                 <button type="button" onclick="closeModal()" class="bg-gray-500 text-white px-4 py-2 rounded mr-2">Batal</button>
-                <button type="submit" id="modalSubmit" class="bg-blue-500 text-white px-4 py-2 rounded">Simpan</button>
+                <button type="submit" id="modalSubmit" class="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-600">Simpan</button>
             </div>
         </form>
     </div>

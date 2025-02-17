@@ -33,6 +33,7 @@ class TahapController extends Controller
     {
         $request->validate([
             'nama' => 'required|string|unique:tahaps|max:255|regex:/^[a-zA-Z\s]+$/',
+            'deskripsi' => 'required|string|max:500',
         ], [
             'nama.required' => 'Nama tahap wajib diisi.',
             'nama.string' => 'Nama tahap harus berupa teks.',
@@ -71,12 +72,14 @@ class TahapController extends Controller
         // Validasi data yang diterima dari form
         $request->validate([
             'nama' => 'required|string|max:255',
+            'deskripsi' => 'required|string|max:500',
             
         ]);
 
         // Memperbarui data Tahap
         $tahap->update([
             'nama' => $request->nama,
+            'deskripsi' => $request->deskripsi,
             
         ]);
 

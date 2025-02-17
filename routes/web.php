@@ -10,6 +10,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\AbsenController;
 use App\Http\Controllers\JurnalController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\UserDashboardController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -25,6 +26,8 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('projects', ProjectController::class);
     Route::resource('tahap', TahapController::class);
     Route::resource('jadpik', JadpikController::class);
+
+    // Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
     
     // Divisi routes (CRUD operations)
     Route::get('/divisi', [DivisiController::class, 'index'])->name('divisi.index');

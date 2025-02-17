@@ -71,7 +71,7 @@ public function izins()
 
 public function projects()
 {
-    return $this->hasMany(Izin::class, 'id_user');
+    return $this->hasMany(Project::class, 'id_user');
 }
 
 
