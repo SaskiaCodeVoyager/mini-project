@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Models\Tahap;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -11,10 +12,13 @@ class ProjectController extends Controller
 {
     public function index()
     {
-        $projects = Project::with('tahap')->where('id_user', Auth::id())->get();
+        $users = User::all();
+        $projects = Project::with('users')
+        ->where('id_user', Auth::id())
+        ->get(); // Eager load relasi users
         $tahaps = Tahap::all();
 
-        return view('projects.index', compact('projects', 'tahaps'));
+        return view('projects.index', compact('projects', 'tahaps', 'users'));
     }
 
     public function create()
@@ -24,20 +28,27 @@ class ProjectController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $request->validate([
-            'nama' => 'required',
-            'nama_project' => 'required|string|max:255',
-            'deskripsi' => 'required',
-            'tahap_id' => 'required|exists:tahaps,id',
-        ]);
+{
+    $request->validate([
+        'nama' => 'required|array',
+        'nama.*' => 'exists:users,id', // Validasi user_id yang valid
+        'nama_project' => 'required|string|max:255',
+        'deskripsi' => 'required',
+        'tahap_id' => 'required|exists:tahaps,id',
+    ]);
 
-        $project = new Project($request->all());
-        $project->id_user = Auth::id();
-        $project->save();
+    $project = Project::create([
+        'nama_project' => $request->nama_project,
+        'deskripsi' => $request->deskripsi,
+        'tahap_id' => $request->tahap_id,
+        'id_user' => Auth::id(),
+    ]);
 
-        return redirect()->route('projects.index')->with('success', 'Project berhasil ditambahkan');
-    }
+    $project->users()->sync($request->nama); // Menyimpan relasi ke pivot
+
+    return redirect()->route('projects.index')->with('success', 'Project berhasil ditambahkan');
+}
+
 
     public function show(Project $project)
     {
@@ -57,21 +68,29 @@ class ProjectController extends Controller
     }
 
     public function update(Request $request, Project $project)
-    {
-        if ($project->id_user != Auth::id()) {
-            abort(403);
-        }
-        $request->validate([
-            'nama' => 'required',
-            'nama_project' => 'required|string|max:255',
-            'deskripsi' => 'required',
-            'tahap_id' => 'required|exists:tahaps,id',
-        ]);
-
-        $project->update($request->all());
-
-        return redirect()->route('projects.index')->with('success', 'Project berhasil diperbarui');
+{
+    if ($project->id_user != Auth::id()) {
+        abort(403);
     }
+
+    $request->validate([
+        'nama' => 'required|array',
+        'nama.*' => 'exists:users,id',
+        'nama_project' => 'required|string|max:255',
+        'deskripsi' => 'required',
+        'tahap_id' => 'required|exists:tahaps,id',
+    ]);
+
+    $project->update([
+        'nama_project' => $request->nama_project,
+        'deskripsi' => $request->deskripsi,
+        'tahap_id' => $request->tahap_id,
+    ]);
+
+    $project->users()->sync($request->nama); // Update relasi pivot
+
+    return redirect()->route('projects.index')->with('success', 'Project berhasil diperbarui');
+}
 
     public function destroy(Project $project)
     {

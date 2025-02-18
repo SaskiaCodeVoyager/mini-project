@@ -19,7 +19,7 @@ class JadpikController extends Controller
 
     foreach ($haris as $hari) {
         // Menggunakan pagination biasa di sini
-        $jadpiks[$hari->id] = Jadpik::where('hari_id', $hari->id)->paginate(10);
+        $jadpiks[$hari->id] = Jadpik::where('hari_id', $hari->id)->paginate(5);
     }
 
     return view('jadpik.index', compact('haris', 'jadpiks'));
