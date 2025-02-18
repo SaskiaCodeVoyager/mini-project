@@ -69,11 +69,10 @@ public function izins()
     return $this->hasMany(Izin::class, 'id_user');
 }
 
-public function projects()
-{
-    return $this->hasMany(Project::class, 'id_user');
-}
-
+    public function projects()
+    {
+        return $this->belongsToMany(Project::class, 'project_users');
+    }
 
 public function tahap() {
     return $this->hasOne(Tahap::class, 'tahap_user');
