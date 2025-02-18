@@ -97,7 +97,7 @@
           <li class="nav-item {{ request()->is('jadpik*') ? 'active' : '' }}">
             <a class="nav-link" href="{{ route('jadpik.index') }}">
               <i class="fe fe-calendar fe-16"></i>
-              <span class="ml-3 item-text">Jadpik</span>
+              <span class="ml-3 item-text">Jadwal Piket</span>
             </a>
           </li>
 
@@ -109,20 +109,30 @@
               </a>
             </li>
 
-            <li class="nav-item {{ request()->is('divisi*') ? 'active' : '' }}">
-              <a href="{{ route('divisi.index') }}" data-toggle="collapse" aria-expanded="false" class="nav-link">
-                <i class="fe fe-user fe-16"></i>
-                <span class="ml-3 item-text">Divisi</span>
-              </a>
-            </li>
-          @endif
+          <!-- Menu Divisi (Ganti Ikon) -->
+<li class="nav-item {{ request()->is('divisi*') ? 'active' : '' }}">
+  <a href="{{ route('divisi.index') }}" data-toggle="collapse" aria-expanded="false" class="nav-link">
+    <i class="fe fe-users fe-16"></i> <!-- Ganti ikon dari 'fe-user' ke 'fe-users' -->
+    <span class="ml-3 item-text">Divisi</span>
+  </a>
+</li>
+@endif
 
-          <li class="nav-item {{ request()->is('absens*') ? 'active' : '' }}">
-            <a href="{{ route('absens.index') }}" data-toggle="collapse" aria-expanded="false" class="nav-link">
-              <i class="fe fe-user fe-16"></i>
-              <span class="ml-3 item-text">Absensi</span>
-            </a>
-          </li>
+<!-- Menu Absensi (Ganti Ikon) -->
+<li class="nav-item {{ request()->is('absens*') ? 'active' : '' }}">
+  <a href="{{ route('absens.index') }}" data-toggle="collapse" aria-expanded="false" class="nav-link">
+    <i class="fe fe-check-square fe-16"></i> <!-- Ganti ikon dari 'fe-user' ke 'fe-check-square' -->
+    <span class="ml-3 item-text">Absensi</span>
+  </a>
+</li>
+
+<li class="nav-item {{ request()->is('absens*') ? 'active' : '' }}">
+  <a href="{{ route('admin.absen.index') }}" data-toggle="collapse" aria-expanded="false" class="nav-link">
+    <i class="fe fe-check-square fe-16"></i> <!-- Ganti ikon dari 'fe-user' ke 'fe-check-square' -->
+    <span class="ml-3 item-text">Absensi2</span>
+  </a>
+</li>
+
 
           <li class="nav-item {{ request()->is('projects*') ? 'active' : '' }}">
             <a href="{{ route('projects.index') }}" data-toggle="collapse" aria-expanded="false" class="nav-link">

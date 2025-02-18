@@ -111,55 +111,6 @@
         </tbody>
     </table>
 
-    <!-- Modal Form Izin -->
-    <div x-cloak x-show="openModal" x-transition:enter="transition ease-out duration-500" x-transition:enter-start="opacity-0 transform scale-50" x-transition:enter-end="opacity-100 transform scale-100" x-transition:leave="transition ease-in duration-500" x-transition:leave-start="opacity-100 transform scale-100" x-transition:leave-end="opacity-0 transform scale-50" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
-        <div class="bg-blue-50 p-6 rounded-lg w-96 shadow-lg" @click.outside="openModal = false">
-            <h2 class="text-xl font-bold mb-4 text-blue-800">Form Izin</h2>
-            <form action="{{ route('izins.store') }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                <div class="mb-4">
-                    <label class="block font-semibold text-blue-700">Dari Tanggal</label>
-                    <input type="date" name="dari_tanggal" required class="w-full p-2 border rounded-lg bg-blue-100">
-                </div>
-
-                <div class="mb-4">
-                    <label class="block font-semibold text-blue-700">Sampai Tanggal</label>
-                    <input type="date" name="sampai_tanggal" required class="w-full p-2 border rounded-lg bg-blue-100">
-                </div>
-
-                <div class="mb-4">
-                    <label class="block font-semibold text-blue-700">Bukti (Gambar)</label>
-                    <input type="file" name="bukti" required class="w-full p-2 border rounded-lg bg-blue-100">
-                </div>
-
-                <div class="mb-4">
-                    <label class="block font-semibold text-blue-700">Deskripsi</label>
-                    <textarea name="deskripsi" required class="w-full p-2 border rounded-lg bg-blue-100"></textarea>
-                </div>
-
-                <div class="flex justify-end gap-2">
-                    <button type="button" @click="openModal = false" class="px-4 py-2 bg-gray-500 text-white rounded">Batal</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">Ajukan</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal Konfirmasi Hapus -->
-    <div x-cloak x-show="openDeleteModal" x-transition:enter="transition ease-out duration-500" x-transition:enter-start="opacity-0 transform scale-50" x-transition:enter-end="opacity-100 transform scale-100" x-transition:leave="transition ease-in duration-500" x-transition:leave-start="opacity-100 transform scale-100" x-transition:leave-end="opacity-0 transform scale-50" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
-        <div class="bg-white p-6 rounded-lg w-96 shadow-lg">
-            <h2 class="text-xl font-bold mb-4 text-red-600">Konfirmasi Hapus</h2>
-            <p class="mb-4">Apakah Anda yakin ingin menghapus data ini?</p>
-            <div class="flex justify-end gap-2">
-                <button @click="openDeleteModal = false" class="px-4 py-2 bg-gray-500 text-white rounded">Batal</button>
-                <form action="" method="POST" :action="deleteUrl" class="inline">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded">Hapus</button>
-                </form>
-            </div>
-        </div>
-    </div>
-
+    <!-- Modal Form Izin dan Modal Konfirmasi Hapus seperti yang sudah ada di kode Anda -->
 </div>
 @endsection

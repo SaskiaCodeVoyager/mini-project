@@ -15,12 +15,16 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
+Route::middleware(['auth'])->group(function () {
+    Route::get('/admin/absen', [IzinController::class, 'showAllAbsen'])->name('admin.absen.index');
+});
 
 // Grouping all routes under the auth middleware
 Route::middleware(['auth'])->group(function () {
     
     // Protected routes that require authentication
     Route::resource('absens', AbsenController::class);
+    Route::get('/absen', [AbsenController::class, 'index'])->name('absen.index');
     Route::resource('izins', IzinController::class);
     Route::resource('jurnals', JurnalController::class);
     Route::resource('projects', ProjectController::class);

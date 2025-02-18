@@ -11,13 +11,28 @@ use Illuminate\Support\Facades\Storage;
 class IzinController extends Controller
 {
     public function index()
-    {
-        $izins = Izin::with('user')->get();
-
-        
-
-        return view('izin.index', compact('izins'));
+{
+    // Cek apakah user adalah admin
+    if (Auth::user()->role == 'admin') {
+        // Admin bisa melihat semua izin dengan status approved atau pending, tanpa mempedulikan id_user
+        $izins = Izin::whereIn('status', ['approved', 'pending'])->get();
+    } else {
+        // User biasa (member) hanya bisa melihat izin mereka sendiri yang statusnya approved atau pending
+        $id_user = Auth::id();
+        $izins = Izin::where('id_user', $id_user)
+                     ->whereIn('status', ['approved', 'pending'])
+                     ->whereDate('dari_tanggal', '<=', now()->toDateString())
+                     ->get();
     }
+
+    return view('absen.index', compact('izins'));
+}
+
+
+
+    
+    
+    
 
     public function create()
     {
@@ -62,23 +77,41 @@ class IzinController extends Controller
         // Simpan bukti izin
         $buktiPath = $request->file('bukti')->store('bukti_izin', 'public');
     
-        // Simpan data izin
+        // Simpan data izin (status otomatis pending)
         $izin = Izin::create([
             'id_user' => $id_user,
             'dari_tanggal' => $request->dari_tanggal,
             'sampai_tanggal' => $request->sampai_tanggal,
             'bukti' => $buktiPath,
-            'deskripsi' => $request->deskripsi
+            'deskripsi' => $request->deskripsi,
+            'status' => 'pending' // Default status
         ]);
     
-        // Update absensi agar sesuai dengan izin
-        Absen::where('id_user', $id_user)
-            ->whereBetween('tanggal', [$request->dari_tanggal, $request->sampai_tanggal])
-            ->update(['keterangan' => 'izin', 'id_izin' => $izin->id]);
-    
-        return redirect()->route('absens.index')->with('success', 'Izin berhasil diajukan.');
+        return redirect()->route('absens.index')->with('success', 'Izin berhasil diajukan dan menunggu persetujuan.');
     }
-    
+
+    public function show($id)
+    {
+        $izin = Izin::findOrFail($id);
+        return view('izin.show', compact('izin'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $izin = Izin::findOrFail($id);
+
+        // Validasi data status izin
+        $request->validate([
+            'status' => 'required|in:pending,approved,rejected'
+        ]);
+
+        // Update status izin
+        $izin->update([
+            'status' => $request->status
+        ]);
+
+        return redirect()->route('absen.index')->with('success', 'Status izin berhasil diperbarui.');
+    }
 
     public function destroy($id)
     {
@@ -93,4 +126,20 @@ class IzinController extends Controller
 
         return redirect()->back()->with('success', 'Izin berhasil dihapus.');
     }
+
+    public function showAllAbsen()
+{
+    // Cek apakah user adalah admin
+    if (Auth::user()->role != 'admin') {
+        return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk melihat data absen.');
+    }
+
+    // Ambil semua data absen
+    $absens = Absen::all(); // Bisa menambahkan filter jika diperlukan, misalnya status absen atau tanggal tertentu
+    $izins = Izin::all();
+
+    return view('admin.absen.index', compact('absens', 'izins'));
+}
+
+
 }

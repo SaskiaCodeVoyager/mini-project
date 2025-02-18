@@ -11,7 +11,7 @@ class Izin extends Model
 
     protected $table = 'izins';
     
-    protected $fillable = ['id_user', 'dari_tanggal', 'sampai_tanggal', 'bukti', 'deskripsi'];
+    protected $fillable = ['id_user', 'dari_tanggal', 'sampai_tanggal', 'bukti', 'deskripsi', 'status'];
 
 
     public function absens() {

@@ -13,6 +13,9 @@ class Absen extends Model {
     /**
      * Relasi ke model User (Setiap absen dimiliki oleh satu user)
      */
+
+     // Di model Absen
+
     public function user() {
         return $this->belongsTo(User::class, 'id_user');
     }
