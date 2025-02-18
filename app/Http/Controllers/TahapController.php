@@ -90,19 +90,20 @@ class TahapController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Tahap $tahap)
-{
-    // Check if the Tahap is associated with any Himalan
-    if ($tahap->himalans()->exists()) {
-        // If there are Himalan associated, prevent deletion and return an error message
-        return redirect()->route('tahap.index')->with('error', 'Tahap tidak dapat dihapus karena masih digunakan dalam Himalan.');
+    public function destroy($id)
+    {
+        // Find the divisi by ID
+        $tahap = Tahap::findOrFail($id);
+
+        // Check if the divisi is being used by any user
+        if ($tahap->users()->exists()) {
+            return redirect()->route('tahap.index')->with('error', 'Tahap tidak dapat dihapus karena masih digunakan.');
+        }
+
+        // Proceed with the deletion
+        $tahap->delete();
+
+        return redirect()->route('tahap.index')->with('success', 'Tahap berhasil dihapus!');
     }
-
-    // If no Himalan is associated, delete the Tahap
-    $tahap->delete();
-
-    // Redirect to the index page with a success message
-    return redirect()->route('tahap.index')->with('success', 'Tahap berhasil dihapus!');
-}
 
 }

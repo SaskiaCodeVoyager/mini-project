@@ -75,4 +75,8 @@ public function projects()
 }
 
 
+public function tahap() {
+    return $this->hasOne(Tahap::class, 'tahap_user');
+}
+
 }
