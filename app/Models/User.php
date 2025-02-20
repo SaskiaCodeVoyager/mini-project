@@ -77,4 +77,9 @@ public function projects()
     return $this->belongsToMany(Project::class, 'project_users', 'id_user', 'project_id');
 }
 
+public function jadpiks()
+    {
+        return $this->belongsToMany(Jadpik::class, 'jadpik_user', 'id_user', 'jadpik_id');
+    }
+
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Jadpik;
 use App\Models\Hari;
+use App\Models\User;
 use Illuminate\Validation\Rule;
 
 class JadpikController extends Controller
@@ -14,6 +15,7 @@ class JadpikController extends Controller
      */
     public function index()
 {
+    $users = User::all();
     $haris = Hari::all();
     $jadpiks = [];
 
@@ -22,7 +24,7 @@ class JadpikController extends Controller
         $jadpiks[$hari->id] = Jadpik::where('hari_id', $hari->id)->paginate(5);
     }
 
-    return view('jadpik.index', compact('haris', 'jadpiks'));
+    return view('jadpik.index', compact('haris', 'jadpiks', 'users'));
 }
 
 
@@ -30,60 +32,61 @@ class JadpikController extends Controller
      * Menyimpan data jadwal piket baru dengan validasi.
      */
     public function store(Request $request)
-    {
-        $request->validate([
-            'nama_siswa' => [
-                'required',
-                'max:255',
-                'regex:/^[A-Za-z\s.]+$/',
-                Rule::unique('jadpiks')->where(function ($query) use ($request) {
-                    return $query->where('hari_id', $request->hari_id);
-                })
-            ],
-            'hari_id' => 'required|exists:haris,id',
-        ], [
-            'nama_siswa.required' => 'Nama siswa harus diisi.',
-            'nama_siswa.max' => 'Nama siswa maksimal 255 karakter.',
-            'nama_siswa.regex' => 'Nama siswa hanya boleh mengandung huruf, spasi, dan titik.',
-            'nama_siswa.unique' => 'Nama siswa ini sudah terdaftar untuk hari yang sama.',
-            'hari_id.required' => 'Hari harus dipilih.',
-            'hari_id.exists' => 'Hari yang dipilih tidak valid.',
-        ]);
+{
+    // dd($request->all());
+    $request->validate([
+        'hari_id' => 'required|exists:haris,id',
+        // 'nama_siswa' => 'required|string|max:255',
+        'id_user' => 'required|array',
+        'id_user.*' => 'exists:users,id_user',
+    ]);
 
-        Jadpik::create($request->all());
+    $users = User::whereIn('id_user', $request->id_user)->pluck('username')->toArray();
+    $namaSiswa = implode(', ', $users); // Gabungkan nama dengan koma
 
-        return redirect()->back()->with('success', 'Jadwal piket berhasil ditambahkan.');
-    }
+    // Simpan data ke jadpik
+    $jadpik = Jadpik::create([
+        'hari_id' => $request->hari_id,
+        'nama_siswa' => $namaSiswa,
+    ]);
+
+    // dd($jadpik, $request->id_user);
+    
+    $jadpik->users()->sync($request->id_user);
+    
+
+    return redirect()->back()->with('success', 'Jadwal piket berhasil ditambahkan.');
+}
 
     /**
      * Memperbarui data jadwal piket dengan validasi.
      */
     public function update(Request $request, $id)
-    {
-        $request->validate([
-            'nama_siswa' => [
-                'required',
-                'max:255',
-                'regex:/^[A-Za-z\s.]+$/',
-                Rule::unique('jadpiks')->where(function ($query) use ($request, $id) {
-                    return $query->where('hari_id', $request->hari_id)->where('id', '!=', $id);
-                })
-            ],
-            'hari_id' => 'required|exists:haris,id',
-        ], [
-            'nama_siswa.required' => 'Nama siswa harus diisi.',
-            'nama_siswa.max' => 'Nama siswa maksimal 255 karakter.',
-            'nama_siswa.regex' => 'Nama siswa hanya boleh mengandung huruf, spasi, dan titik.',
-            'nama_siswa.unique' => 'Nama siswa ini sudah terdaftar untuk hari yang sama.',
-            'hari_id.required' => 'Hari harus dipilih.',
-            'hari_id.exists' => 'Hari yang dipilih tidak valid.',
-        ]);
+{
+    $request->validate([
+        'hari_id' => 'required|exists:haris,id',
+        'id_user' => 'required|array',
+        'id_user.*' => 'exists:users,id_user',
+    ]);
 
-        $jadpik = Jadpik::findOrFail($id);
-        $jadpik->update($request->all());
+    $jadpik = Jadpik::findOrFail($id);
+    
+    // Ambil nama siswa berdasarkan ID user
+    $users = User::whereIn('id_user', $request->id_user)->pluck('username')->toArray();
+    $namaSiswa = implode(', ', $users); // Gabungkan nama dengan koma
 
-        return redirect()->back()->with('success', 'Jadwal piket berhasil diperbarui.');
-    }
+    // Update data jadpik
+    $jadpik->update([
+        'hari_id' => $request->hari_id,
+        'nama_siswa' => $namaSiswa, // Pastikan nama_siswa diperbarui
+    ]);
+
+    // Update relasi pivot
+    $jadpik->users()->sync($request->id_user);
+
+    return redirect()->back()->with('success', 'Jadwal piket berhasil diperbarui.');
+}
+
 
     /**
      * Menghapus data jadwal piket.

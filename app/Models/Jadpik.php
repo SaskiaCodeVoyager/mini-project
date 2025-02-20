@@ -15,4 +15,8 @@ class Jadpik extends Model
     {
         return $this->belongsTo(Hari::class);
     }
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'jadpik_user', 'jadpik_id', 'id_user');
+    }
 }

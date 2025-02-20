@@ -8,6 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
     <style>
         .overflow-y-auto::-webkit-scrollbar {
             width: 5px;
@@ -39,8 +40,11 @@
                 @else
                     <div class="overflow-y-auto max-h-64 space-y-2">
                         @foreach ($jadpiks[$hari->id] as $jadpik)
-                            <div class="flex items-center justify-between bg-gray-100 p-2 rounded">
-                                <span>{{ $jadpik->nama_siswa }}</span>
+                            @php
+                                $nama_siswa = explode(',', $jadpik->nama_siswa);
+                            @endphp
+                            <div class="bg-gray-100 p-2 rounded">
+                                <span>{{ $nama_siswa[0] }}</span> <!-- Menampilkan hanya nama pertama -->
                                 @if(auth()->user()->role === 'admin')
                                 <div class="flex space-x-4">
                                     <button class="bg-yellow-500 text-white px-2 py-1 rounded-md btn-edit" 
@@ -56,6 +60,27 @@
                                 </div>
                                 @endif
                             </div>
+                            @if(count($nama_siswa) > 1)
+                                @foreach(array_slice($nama_siswa, 1) as $nama)
+                                    <div class="bg-gray-100 p-2 rounded">
+                                        <span>{{ $nama }}</span>
+                                        @if(auth()->user()->role === 'admin')
+                                            <div class="flex space-x-4">
+                                                <button class="bg-yellow-500 text-white px-2 py-1 rounded-md btn-edit" 
+                                                    data-id="{{ $jadpik->id }}" 
+                                                    data-nama="{{ $jadpik->nama_siswa }}" 
+                                                    data-hari="{{ $jadpik->hari_id }}">
+                                                    Edit
+                                                </button>
+                                                <button class="bg-red-500 text-white px-2 py-1 rounded-md btn-delete" 
+                                                    data-id="{{ $jadpik->id }}">
+                                                    Hapus
+                                                </button>
+                                            </div>
+                                            @endif
+                                    </div>
+                                @endforeach
+                            @endif
                         @endforeach
                     </div>
                     <div class="mt-3">
@@ -76,7 +101,12 @@
             @csrf
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700">Nama Siswa</label>
-                <input type="text" class="mt-1 block w-full border-gray-300 rounded-md" name="nama_siswa" placeholder="Masukkan Nama Panjang anda!!">
+                <select class="select2" name="id_user[]" multiple="multiple">
+                    @foreach($users as $user)
+                        <option value="{{ $user->id_user }}">{{ $user->username }}</option>
+                    @endforeach
+                </select>
+                
             </div>
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700">Hari</label>
@@ -95,6 +125,8 @@
 </div>
 
 <!-- Modal Edit Jadpik -->
+@if(auth()->user()->role === 'admin')
+<!-- Modal Edit Jadpik -->
 <div id="editModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center hidden">
     <div class="bg-white rounded-lg shadow-lg p-6 w-96">
         <h5 class="text-xl font-semibold mb-4">Edit Jadwal Piket</h5>
@@ -103,7 +135,11 @@
             @method('PUT')
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700">Nama Siswa</label>
-                <input type="text" id="editNamaSiswa" class="mt-1 block w-full border-gray-300 rounded-md" name="nama_siswa" required>
+                <select id="editNamaSiswa" class="select2 w-full" name="id_user[]" multiple="multiple">
+                    @foreach($users as $user)
+                        <option value="{{ $user->id_user }}">{{ $user->username }}</option>
+                    @endforeach
+                </select>
             </div>
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700">Hari</label>
@@ -120,6 +156,7 @@
         </form>               
     </div>
 </div>
+@endif
 
 <!-- Modal Hapus Jadpik -->
 <div id="deleteModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center hidden">
@@ -139,49 +176,66 @@
 
 <!-- jQuery -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
 
 <!-- Script jQuery untuk Modal -->
 <script>
     $(document).ready(function() {
-        // Tampilkan modal tambah
-        $('#showCreateModal').click(function() {
-            $('#createModal').removeClass('hidden');
-        });
-
-        // Tutup modal tambah
-        $('#closeCreateModal').click(function() {
-            $('#createModal').addClass('hidden');
-        });
-
-        // Tampilkan modal edit
-        $('.btn-edit').click(function() {
-            let id = $(this).data('id');
-            let nama_siswa = $(this).data('nama');
-            let hari_id = $(this).data('hari');
-
-            $('#editNamaSiswa').val(nama_siswa);
-            $('#editHariId').val(hari_id);
-            $('#editForm').attr('action', '/jadpik/' + id);
-            $('#editModal').removeClass('hidden');
-        });
-
-        // Tutup modal edit
-        $('#closeEditModal').click(function() {
-            $('#editModal').addClass('hidden');
-        });
-
-        // Tampilkan modal hapus
-        $('.btn-delete').click(function() {
-            let id = $(this).data('id');
-            $('#deleteForm').attr('action', '/jadpik/' + id);
-            $('#deleteModal').removeClass('hidden');
-        });
-
-        // Tutup modal hapus
-        $('#closeDeleteModal').click(function() {
-            $('#deleteModal').addClass('hidden');
-        });
+    $('.select2').select2({
+        placeholder: "Pilih Siswa",
+        allowClear: true
     });
+
+    // Tampilkan modal tambah
+    $('#showCreateModal').click(function() {
+        $('#createModal').removeClass('hidden');
+    });
+
+    // Tutup modal tambah
+    $('#closeCreateModal').click(function() {
+        $('#createModal').addClass('hidden');
+    });
+
+    // Tampilkan modal edit
+$('.btn-edit').click(function() {
+    let id = $(this).data('id');
+    let nama_siswa = $(this).data('nama').split(', ').map(nama => nama.trim()); // Pastikan pemisahan benar tanpa spasi ekstra
+    let hari_id = $(this).data('hari');
+
+    // Cari ID user berdasarkan nama siswa yang dipilih
+    let selectedUsers = [];
+    $('#editNamaSiswa option').each(function() {
+        if (nama_siswa.includes($(this).text())) {
+            selectedUsers.push($(this).val());
+        }
+    });
+
+    $('#editNamaSiswa').val(selectedUsers).trigger('change'); // Memastikan Select2 menerima array dengan benar
+    $('#editHariId').val(hari_id);
+    $('#editForm').attr('action', '/jadpik/' + id);
+    $('#editModal').removeClass('hidden');
+});
+
+
+
+    // Tutup modal edit
+    $('#closeEditModal').click(function() {
+        $('#editModal').addClass('hidden');
+    });
+
+    // Tampilkan modal hapus
+    $('.btn-delete').click(function() {
+        let id = $(this).data('id');
+        $('#deleteForm').attr('action', '/jadpik/' + id);
+        $('#deleteModal').removeClass('hidden');
+    });
+
+    // Tutup modal hapus
+    $('#closeDeleteModal').click(function() {
+        $('#deleteModal').addClass('hidden');
+    });
+});
+
 </script>
 @endif
 </body>
