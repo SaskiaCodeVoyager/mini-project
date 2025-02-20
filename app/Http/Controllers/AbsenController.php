@@ -9,12 +9,32 @@ use Illuminate\Support\Facades\Auth;
 
 class AbsenController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $id_user = Auth::id();
-        $absens = Absen::with('user')->where('id_user', $id_user)->orderBy('tanggal', 'desc')->get();
+        
+        $query = Absen::with('user')->where('id_user', $id_user);
+        
+        // Filter berdasarkan keterangan
+        if ($request->filled('keterangan')) {
+            $query->where('keterangan', $request->keterangan);
+        }
+        
+        // Filter berdasarkan tanggal
+        if ($request->filled('tanggal')) {
+            $query->whereDate('tanggal', $request->tanggal);
+        }
+    
+        // Pencarian berdasarkan nama pengguna
+        if ($request->filled('search')) {
+            $query->whereHas('user', function($q) use ($request) {
+                $q->where('username', 'like', '%' . $request->search . '%');
+            });
+        }
+        
+        $absens = $query->orderBy('tanggal', 'desc')->get();
         $izins = Izin::with('user')->where('id_user', $id_user)->get();
-
+    
         return view('absens.index', compact('absens', 'izins'));
     }
 
@@ -31,15 +51,6 @@ class AbsenController extends Controller
             return redirect()->back()->with('error', 'Anda harus login untuk melakukan absen.');
         }
 
-        $existingIzin = Izin::where('id_user', $id_user)
-                            ->whereDate('dari_tanggal', '<=', now()->toDateString())
-                            ->whereDate('sampai_tanggal', '>=', now()->toDateString())
-                            ->exists();
-
-        if ($existingIzin) {
-            return redirect()->back()->with('error', 'Anda tidak bisa absen karena sudah mengajukan izin.');
-        }
-
         $lastAbsen = Absen::where('id_user', $id_user)
                           ->where('tanggal', now()->toDateString())
                           ->first();
@@ -51,7 +62,7 @@ class AbsenController extends Controller
                 $lastAbsen->update(['absen_pulang' => $currentTime->format('H:i:s')]);
                 return redirect()->back()->with('success', 'Absen pulang berhasil dicatat.');
             }
-            return redirect()->back()->with('error', 'Anda hanya bisa melakukan absen sekali dalam sehari atau belum mencapai waktu absen pulang.');
+            return redirect()->back()->with('error', 'Anda hanya bisa melakukan absen masuk sekali dalam sehari atau belum mencapai waktu absen pulang.');
         }
 
         $jamMasuk = $currentTime->format('H:i:s'); 
@@ -66,6 +77,26 @@ class AbsenController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Absen berhasil dicatat dengan status: ' . $keterangan);
+    }
+
+    public function izin(Request $request)
+    {
+        $id_user = Auth::id();
+        
+        $request->validate([
+            'dari_tanggal' => 'required|date',
+            'sampai_tanggal' => 'required|date|after_or_equal:dari_tanggal',
+            'alasan' => 'required|string|max:255',
+        ]);
+        
+        Izin::create([
+            'id_user' => $id_user,
+            'dari_tanggal' => $request->dari_tanggal,
+            'sampai_tanggal' => $request->sampai_tanggal,
+            'alasan' => $request->alasan,
+        ]);
+        
+        return redirect()->back()->with('success', 'Izin berhasil diajukan.');
     }
 
     public function edit($id)

@@ -16,6 +16,20 @@
         </div>
     @endif
 
+    <!-- Form Pencarian dan Filter -->
+    <div class="mb-4">
+        <form action="{{ route('absens.index') }}" method="GET" class="flex gap-4">
+            <input type="date" name="tanggal" value="{{ request('tanggal') }}" class="border border-blue-300 px-4 py-2 rounded" placeholder="Tanggal">
+            <select name="keterangan" class="border border-blue-300 px-4 py-2 rounded">
+                <option value="">Semua Keterangan</option>
+                <option value="masuk" {{ request('keterangan') == 'masuk' ? 'selected' : '' }}>Masuk</option>
+                <option value="izin" {{ request('keterangan') == 'izin' ? 'selected' : '' }}>Izin</option>
+                <option value="alpa" {{ request('keterangan') == 'alpa' ? 'selected' : '' }}>Alpa</option>
+            </select>
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Filter</button>
+        </form>
+    </div>
+
     <!-- Tombol Absen dan Izin di atas tabel -->
     <div class="mt-4 flex gap-4 mb-4">
         <form action="{{ route('absens.store') }}" method="POST">
@@ -83,7 +97,6 @@
         <tbody>
             @foreach ($izins as $izin)
             <tr class="hover:bg-blue-50 bg-blue-100">
-                
                 <td class="border border-blue-300 px-4 py-2">{{ $izin->user->username }}</td>
                 <td class="border border-blue-300 px-4 py-2">
                     {{ \Carbon\Carbon::parse($izin->dari_tanggal)->locale('id')->translatedFormat('l, d F Y') }} 
@@ -110,6 +123,7 @@
             @endforeach
         </tbody>
     </table>
+
 
     <!-- Modal Form Izin dan Modal Konfirmasi Hapus seperti yang sudah ada di kode Anda -->
 </div>

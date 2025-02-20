@@ -75,7 +75,8 @@
         <thead>
             <tr class="bg-blue-900 text-white">
                 <th class="border border-blue-300 px-4 py-2">Nama</th>
-                <th class="border border-blue-300 px-4 py-2">Tanggal</th>
+                <th class="border border-blue-300 px-4 py-2">Tanggal Mulai</th>
+                <th class="border border-blue-300 px-4 py-2">Tanggal Selesai</th>
                 <th class="border border-blue-300 px-4 py-2">Keterangan</th>
                 <th class="border border-blue-300 px-4 py-2">Aksi</th>
             </tr>
@@ -86,10 +87,12 @@
                 
                 <td class="border border-blue-300 px-4 py-2">{{ $izin->user->username }}</td>
                 <td class="border border-blue-300 px-4 py-2">
-                    {{ \Carbon\Carbon::parse($izin->dari_tanggal)->locale('id')->translatedFormat('l, d F Y') }} 
-                    - 
+                    {{ \Carbon\Carbon::parse($izin->dari_tanggal)->locale('id')->translatedFormat('l, d F Y') }}
+                </td>
+                <td class="border border-blue-300 px-4 py-2">
                     {{ \Carbon\Carbon::parse($izin->sampai_tanggal)->locale('id')->translatedFormat('l, d F Y') }}
                 </td>
+                
                 <td class="border border-blue-300 px-4 py-2">
                     <span class="text-blue-600 font-bold">Izin</span>
                 </td>

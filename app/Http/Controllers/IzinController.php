@@ -10,23 +10,35 @@ use Illuminate\Support\Facades\Storage;
 
 class IzinController extends Controller
 {
-    public function index()
-{
-    // Cek apakah user adalah admin
-    if (Auth::user()->role == 'admin') {
-        // Admin bisa melihat semua izin dengan status approved atau pending, tanpa mempedulikan id_user
-        $izins = Izin::whereIn('status', ['approved', 'pending'])->get();
-    } else {
-        // User biasa (member) hanya bisa melihat izin mereka sendiri yang statusnya approved atau pending
-        $id_user = Auth::id();
-        $izins = Izin::where('id_user', $id_user)
-                     ->whereIn('status', ['approved', 'pending'])
-                     ->whereDate('dari_tanggal', '<=', now()->toDateString())
-                     ->get();
+    public function index(Request $request)
+    {
+        // Cek apakah user adalah admin
+        if (Auth::user()->role == 'admin') {
+            // Admin bisa melihat semua izin dengan status approved atau pending, tanpa mempedulikan id_user
+            $query = Izin::whereIn('status', ['approved', 'pending']);
+        } else {
+            // User biasa (member) hanya bisa melihat izin mereka sendiri yang statusnya approved atau pending
+            $id_user = Auth::id();
+            $query = Izin::where('id_user', $id_user)
+                         ->whereIn('status', ['approved', 'pending'])
+                         ->whereDate('dari_tanggal', '<=', now()->toDateString());
+        }
+    
+        // Filter berdasarkan tanggal
+        if ($request->filled('tanggal')) {
+            $query->whereDate('dari_tanggal', '<=', $request->tanggal)
+                  ->orWhereDate('sampai_tanggal', '>=', $request->tanggal);
+        }
+    
+        // Filter berdasarkan status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+    
+        $izins = $query->get();
+    
+        return view('absen.index', compact('izins'));
     }
-
-    return view('absen.index', compact('izins'));
-}
 
 
 
