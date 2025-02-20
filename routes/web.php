@@ -19,6 +19,20 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/admin/absen', [IzinController::class, 'showAllAbsen'])->name('admin.absen.index');
 });
 
+Route::delete('/projects/{id}', [ProjectController::class, 'destroy'])
+    ->middleware('auth')
+    ->name('projects.destroy');
+
+// Route::put('/projects/{id}', [ProjectController::class, 'update'])
+//     ->middleware('auth')
+//     ->name('projects.update');
+// Route::put('/projects/{id}', [ProjectController::class, 'update'])->middleware('auth')->name('projects.update');
+Route::middleware(['auth'])->group(function () {
+    Route::put('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
+});
+
+
+
 Route::resource('projects', ProjectController::class);
 
 // Grouping all routes under the auth middleware

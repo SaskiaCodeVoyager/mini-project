@@ -57,7 +57,7 @@
     <div x-show="openCreateModal" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50" @click.away="openCreateModal = false" x-transition>
         <div class="bg-white p-6 rounded-lg shadow-lg w-96">
             <h2 class="text-xl font-bold mb-4 text-blue-800">Tambah Project</h2>
-            <form action="/projects" method="POST">
+            <form action="{{ route('projects.store') }}" method="POST">
                 @csrf
                 
                 <select name="tahap_id" class="w-full p-2 border rounded mb-2 text-blue-800" x-model="projectTahap" required>
@@ -68,7 +68,7 @@
                 </select>
                 
                 <template x-if="projectTahap == tahapMini">
-                    <select x-ref="multiNama" name="nama[]" class="w-full border p-2 select2" multiple="multiple">
+                    <select x-ref="select2" name="id_user[]" class="w-full border p-2 select2" multiple="multiple">
                         @foreach($users as $user)
                             <option value="{{ $user->id_user }}">{{ $user->username }}</option>
                         @endforeach
@@ -93,13 +93,12 @@
     
     <!-- Edit Modal -->
   <!-- Edit Modal -->
-<div x-show="openEditModal" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50" 
-@click.away="openEditModal = false" x-transition>
-<div class="bg-white p-6 rounded-lg shadow-lg w-96">
+  <div x-show="openEditModal" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50" 
+  @click.away="openEditModal = false" x-transition>
+    <div class="bg-white p-6 rounded-lg shadow-lg w-96">
     <h2 class="text-xl font-bold mb-4 text-blue-800">Edit Project</h2>
     
-    <form :action="'{{ route('projects.update', '') }}/' + projectId" method="POST">
-
+    <form action="{{ route('projects.update', $project->id) }}" method="POST">
         @csrf
         @method('PUT')
 
@@ -116,16 +115,19 @@
             @endforeach
         </select>
 
-        <select name="nama[]" class="w-full p-2 border rounded mb-2 select2" multiple x-ref="multiNamaEdit">
+        <select name="id_user[]" class="w-full p-2 border rounded mb-2 select2" multiple x-ref="multiNamaEdit">
             @foreach ($users as $user)
                 <option value="{{ $user->id_user }}">{{ $user->username }}</option>
             @endforeach
         </select>
 
         <div class="flex justify-end space-x-2 mt-4">
-            <button type="button" @click="openEditModal = false" 
-                class="px-4 py-2 bg-gray-500 text-white rounded">Batal</button>
-            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">Simpan</button>
+            <button type="button" @click="openEditModal = false" class="px-4 py-2 bg-gray-500 text-white rounded">
+                Batal
+            </button>
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">
+                Simpan
+            </button>
         </div>
     </form>
 </div>
@@ -138,7 +140,7 @@
             <h2 class="text-xl font-bold mb-4 text-red-600">Hapus Project</h2>
             <p class="text-gray-700 mb-4">Apakah kamu yakin ingin menghapus project ini? Tindakan ini tidak bisa dibatalkan!</p>
             
-            <form :action="'/projects/' + projectId" method="POST">
+            <form :action="'/projects/' + projectId" method="POST" @submit.prevent="$el.submit()">
                 @csrf
                 @method('DELETE')
     
@@ -152,17 +154,18 @@
 </div>
 
 <script>
+    
     document.addEventListener("alpine:init", () => {
         Alpine.data("projectComponent", () => ({
             projectTahap: null,
             tahapMini: {{ $tahaps->where('nama', 'mini')->first()->id ?? 'null' }},
-
+            
             init() {
                 this.$watch('projectTahap', (value) => {
                     if (value == this.tahapMini) {
                         this.$nextTick(() => {
-                            if (this.$refs.multiNama) {
-                                $(this.$refs.multiNama).select2({
+                            if (this.$refs.multiNamaEdit) {
+                                $(this.$refs.multiNamaEdit).select2({
                                     placeholder: "Pilih Pengguna",
                                     allowClear: true,
                                     width: '100%',
@@ -177,13 +180,11 @@
     });
 
     document.addEventListener("DOMContentLoaded", function() {
-        $(document).on('change', 'select.select2', function () {
-            $(this).select2({
-                placeholder: "Pilih Pengguna",
-                allowClear: true,
-                width: '100%',
-                maximumSelectionLength: 4
-            });
+        $('select.select2').select2({
+            placeholder: "Pilih Pengguna",
+            allowClear: true,
+            width: '100%',
+            maximumSelectionLength: 2
         });
     });
 
@@ -197,6 +198,7 @@
             });
         });
     });
+
 </script>
 
 @endsection

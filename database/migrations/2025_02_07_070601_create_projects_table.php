@@ -9,7 +9,6 @@ return new class extends Migration {
     {
         Schema::create('projects', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id_user')->onDelete('RESTRICT');
             $table->text('nama');
             $table->string('nama_project');
             $table->text('deskripsi');
