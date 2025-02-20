@@ -82,4 +82,9 @@ public function jadpiks()
         return $this->belongsToMany(Jadpik::class, 'jadpik_user', 'id_user', 'jadpik_id');
     }
 
+public function jurnals()
+    {
+        return $this->hasMany(Jurnal::class, 'id_user');
+    }
+
 }

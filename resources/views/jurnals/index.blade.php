@@ -2,7 +2,6 @@
 
 @section('content')
 <div class="container mx-auto p-4">
-    <!-- Alert Messages -->
     @if (session('success'))
         <div class="mb-4 p-4 bg-green-100 text-green-700 border border-green-300 rounded">
             {{ session('success') }}
@@ -12,10 +11,9 @@
             {{ session('error') }}
         </div>
     @endif
-    
+
     <h1 class="text-2xl font-bold mb-4 text-blue-900">Daftar Jurnal</h1>
-    
-    <!-- Tombol Tambah Jurnal -->
+
     <div class="mb-4 flex gap-2">
         <button 
             onclick="openModal('create')" 
@@ -39,16 +37,24 @@
             @foreach ($jurnals as $jurnal)
             <tr class="bg-white hover:bg-blue-50">
                 <td class="border p-2 text-blue-700">{{ $jurnal->judul }}</td>
-                <td class="border p-2"><img src="{{ asset('storage/' . $jurnal->gambar) }}" alt="{{ $jurnal->judul }}" width="100"></td>
+                <td class="border p-2">
+                    <img src="{{ asset('storage/' . $jurnal->gambar) }}" alt="{{ $jurnal->judul }}" width="100">
+                </td>
                 <td class="border p-2 text-blue-700">{{ $jurnal->deskripsi }}</td>
                 <td class="border p-2 text-blue-700">
                     {{ \Carbon\Carbon::parse($jurnal->created_at)->locale('id')->translatedFormat('l, d F Y') }}
                 </td>
-                <td class="border p-2">
-                    @if (now()->format('H:i:s') < '08:00:00' && now()->isSameDay($jurnal->created_at))
-                    <button onclick="openModal('edit', {{ $jurnal }})" class="text-yellow-500 hover:text-yellow-400">Edit</button>
-                    @endif
-                    <button onclick="konfirmasiHapus({{ $jurnal->id }})" class="text-red-500 hover:text-red-400">Hapus</button>
+                <td class="border p-2 flex gap-2">
+                    <button onclick="showDetail({{ json_encode($jurnal) }})" class="text-blue-500 hover:text-blue-400">
+                        <i class="fas fa-eye"></i> Show
+                    </button>
+                    <form action="{{ route('jurnals.destroy', $jurnal->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus jurnal ini?');">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="text-red-500 hover:text-red-400">
+                            <i class="fas fa-trash"></i> Hapus
+                        </button>
+                    </form>
                 </td>
             </tr>
             @endforeach
@@ -56,23 +62,18 @@
     </table>
 </div>
 
-<!-- Modal Konfirmasi Hapus -->
-<div id="modalHapus" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
-    <div class="bg-white p-6 rounded-lg shadow-lg w-96">
-        <h2 class="text-lg font-semibold mb-4 text-blue-900">Konfirmasi Hapus</h2>
-        <p class="text-blue-700">Apakah Anda yakin ingin menghapus jurnal ini?</p>
+<!-- Modal Show -->
+<div id="modalShow" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center">
+    <div class="bg-white p-6 rounded shadow-lg w-96">
+        <h2 class="text-lg font-bold mb-4 text-blue-900">Detail Jurnal</h2>
+        <div id="showBody"></div>
         <div class="mt-4 flex justify-end">
-            <button id="batalHapus" class="px-4 py-2 bg-gray-300 text-gray-700 rounded mr-2">Batal</button>
-            <form id="formHapus" method="POST" action="">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="px-3 py-1 bg-red-500 text-white rounded">Hapus</button>
-            </form>
+            <button type="button" onclick="closeShowModal()" class="bg-gray-500 text-white px-4 py-2 rounded">Tutup</button>
         </div>
     </div>
 </div>
 
-<!-- Modal -->
+<!-- Modal Form -->
 <div id="modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center">
     <div class="bg-white p-6 rounded shadow-lg w-96">
         <h2 id="modalTitle" class="text-lg font-bold mb-4 text-blue-900"></h2>
@@ -89,51 +90,71 @@
 </div>
 
 <script>
-    function konfirmasiHapus(jurnalId) {
-        const modal = document.getElementById('modalHapus');
-        const formHapus = document.getElementById('formHapus');
-
-        if (jurnalId) {
-            formHapus.action = `/jurnals/${jurnalId}`;
-            modal.classList.remove('hidden');
-        }
-    }
-
-    document.getElementById('batalHapus').addEventListener('click', function () {
-        document.getElementById('modalHapus').classList.add('hidden');
-    });
-
     function openModal(type, data = null) {
         const modal = document.getElementById('modal');
         const title = document.getElementById('modalTitle');
         const body = document.getElementById('modalBody');
         const form = document.getElementById('modalForm');
-        const submit = document.getElementById('modalSubmit');
 
         form.reset();
         body.innerHTML = '';
-        submit.classList.remove('hidden');
 
-        if (type === 'create' || type === 'edit') {
-            title.innerText = type === 'create' ? 'Tambah Jurnal' : 'Edit Jurnal';
-            form.action = type === 'create' ? '{{ route('jurnals.store') }}' : `{{ url('jurnals') }}/${data.id}`;
-            if (type === 'edit') {
-                document.getElementById('modalMethod').value = 'PUT';
-            }
-
+        if (type === 'create') {
+            title.innerText = 'Tambah Jurnal';
+            form.action = '{{ route('jurnals.store') }}';
             body.innerHTML = `
                 <label class='block mb-2'>Judul</label>
-                <input type='text' name='judul' class='border p-2 w-full mb-2' required value="${data ? data.judul : ''}">
+                <input type='text' name='judul' class='border p-2 w-full mb-2' required>
                 <label class='block mb-2'>Gambar</label>
                 <input type='file' name='gambar' class='border p-2 w-full mb-2'>
-                <label class='block mb-2'>Deskripsi</label>
-                <textarea name='deskripsi' class='border p-2 w-full' required>${data ? data.deskripsi : ''}</textarea>
+                <label class='block mb-2'>Deskripsi (min 150 karakter)</label>
+                <textarea name='deskripsi' class='border p-2 w-full' required oninput="updateCharacterCount(this)"></textarea>
+                <div id="charCount" class="text-gray-500">0/150</div>
             `;
         }
         
         modal.classList.remove('hidden');
     }
-    
+
+    function showDetail(data) {
+    console.log("Show Detail Called:", data); // Tambahan untuk debugging
+    const modalShow = document.getElementById('modalShow');
+    const showBody = document.getElementById('showBody');
+
+    showBody.innerHTML = `
+        <strong>Nama:</strong>
+        <p> {{ $jurnal->user ? $jurnal->user->username : 'Tidak Diketahui' }}</p>
+        <strong>Asal Sekolah:</strong>
+        <p> {{ $jurnal->user ? $jurnal->user->asal_sekolah : 'Tidak Diketahui' }}</p>
+        <strong>Kegiatan:</strong>
+        <p> ${data.deskripsi}</p>
+        <strong>Tanggal:</strong>
+       <p> ${new Date(data.created_at).toISOString().replace('T', ' ').split('.')[0]}</p>
+        <strong>Bukti:</strong>
+        <img src="${data.gambar ? '{{ asset('storage/') }}' + '/' + data.gambar : ''}" alt="${data.judul}" width="100">
+    `;
+
+    modalShow.classList.remove('hidden');
+}
+
+    function closeShowModal() {
+        document.getElementById('modalShow').classList.add('hidden');
+    }
+
+    function updateCharacterCount(textarea) {
+        const charCount = document.getElementById('charCount');
+        const currentLength = textarea.value.length;
+        charCount.innerText = `${currentLength}/150`;
+
+        if (currentLength < 150) {
+            charCount.classList.add('text-red-500');
+            charCount.classList.remove('text-green-500');
+        } else {
+            charCount.classList.remove('text-red-500');
+            charCount.classList.add('text-green-500');
+        }
+    }
+
     function closeModal() {
         document.getElementById('modal').classList.add('hidden');
     }

@@ -15,32 +15,34 @@ class JurnalController extends Controller
      */
     public function index()
     {
-        $id_user = Auth::id(); // Mengambil id user yang sedang login
-        $currentTime = now();
+        $today = now()->toDateString(); // Format: "2025-02-20"
+        $jamSekarang = now()->hour;
+        $id_user = Auth::id();
 
-        $today = $currentTime->toDateTimeString();
-        $deadline = Carbon::now()->toDateString(); // Contoh: "2025-02-13"
-        $customDate = Carbon::parse($deadline)->setTime(24, 00, 0);    
+        // Cek apakah jurnal hari ini sudah ada
+        $jurnalHariIni = Jurnal::whereDate('created_at', $today)->first();
 
-        // Cek apakah jurnal hari ini sudah ada untuk user yang sedang login
-        $jurnalHariIni = Jurnal::where('id_user', $id_user)
-                               ->whereDate('created_at', $today)
-                               ->first();
-
-        // Jika belum ada jurnal dan waktu sudah lebih dari jam 00:00 (midnight), buat otomatis
-        if (is_null($jurnalHariIni) && $today >= $customDate) {  
-            $jurnalHariIni = Jurnal::create([
-                'id_user' => $id_user, // Pastikan jurnal hanya milik user yang sedang login
+        // Jika belum ada dan sudah lewat jam , buat jurnal kosong
+        if (is_null($jurnalHariIni) && $jamSekarang >= 8) {
+            Jurnal::create([
+                'id_user' => $id_user,
                 'judul' => 'Kosong',
-                'gambar' => '', // Pastikan ada gambar default di storage
-                'deskripsi' => 'Tidak ada jurnal yang diisi hari ini.',
+                'gambar' => 'uploads/default.png',
+                'deskripsi' => 'Hayoooo skotjam 50 kali!!.',
+                'created_at' => now(), // Pastikan dibuat dengan timestamp hari ini
             ]);
         }
+        $jurnals = Jurnal::with('user')->get();
 
-        // Menampilkan daftar jurnal yang terkait dengan user yang sedang login
-        $jurnals = Jurnal::where('id_user', $id_user)->latest()->paginate(10);
+        // Ambil semua jurnal terbaru
+        $jurnals = Jurnal::latest()->paginate(10);
         return view('jurnals.index', compact('jurnals'));
     }
+
+    /**
+     * Simpan jurnal baru ke dalam database.
+     * Hanya bisa membuat jurnal setelah jam 07:00 pagi.
+     */
 
     /**
      * Tampilkan formulir untuk membuat jurnal baru.
@@ -55,120 +57,141 @@ class JurnalController extends Controller
      */
     public function store(Request $request)
     {
-        $id_user = Auth::id(); // Mengambil id user yang sedang login
-
-        $currentTime = now();
-        $today = $currentTime->toDateString();
-
+        $id_user = Auth::id();
+        $today = now()->toDateString();
+        $jamSekarang = now()->hour;
+    
         // Cek apakah sudah ada jurnal hari ini untuk user yang sedang login
-        $userLastJurnal = Jurnal::where('id_user', $id_user)
-                                 ->whereDate('created_at', $today)
-                                 ->first();
-        if ($userLastJurnal) {
-            return redirect()->route('jurnals.index')->with('error', 'Anda hanya bisa mengisi jurnal sekali dalam 24 jam.');
+        $jurnalHariIni = Jurnal::where('id_user', $id_user)
+                                ->whereDate('created_at', $today)
+                                ->first();
+    
+        // Pastikan jurnal hanya bisa dibuat setelah jam 07:00 pagi
+        if ($jamSekarang < 7) {
+            return redirect()->route('jurnals.index')->with('error', 'Jurnal hanya bisa dibuat setelah jam 07:00 pagi.');
         }
-
-        // Cek apakah waktu saat ini lebih dari jam 16:00
-        if ($currentTime->hour < 9) {
-            return redirect()->route('jurnals.index')->with('error', 'Jurnal hanya bisa diisi setelah jam 16:00.');
+    
+        // Jika jurnal sudah ada, berikan pesan error
+        if ($jurnalHariIni) {
+            return redirect()->route('jurnals.index')->with('error', 'sudah ada jurnal untuk hari ini.');
         }
-
-        $request->validate([
-            'judul' => 'required|string|max:255',
-            'gambar' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'deskripsi' => 'required|string',
-        ], [
-            'judul.required' => 'Judul wajib diisi.',
-            'judul.max' => 'Judul tidak boleh lebih dari 255 karakter.',
-            'gambar.required' => 'Gambar wajib diunggah.',
-            'gambar.image' => 'File harus berupa gambar.',
-            'gambar.mimes' => 'Format gambar harus jpeg, png, jpg, atau gif.',
-            'gambar.max' => 'Ukuran gambar tidak boleh lebih dari 2MB.',
-            'deskripsi.required' => 'Deskripsi wajib diisi.',
-        ]);
-
-        $gambarPath = $request->file('gambar')->store('jurnals', 'public');
-
-        Jurnal::create([
-            'id_user' => $id_user, // Pastikan jurnal milik user yang sedang login
-            'judul' => $request->judul,
-            'gambar' => $gambarPath,
-            'deskripsi' => $request->deskripsi,
-        ]);
-
+    
+        // Jika jurnal kosong sudah ada, update menjadi milik user
+        $jurnalKosong = Jurnal::whereDate('created_at', $today)
+                              ->where('judul', 'Kosong')
+                              ->first();
+    
+        if ($jurnalKosong && is_null($jurnalKosong->id_user)) {
+            $jurnalKosong->update([
+                'id_user' => $id_user,
+                'judul' => $request->judul,
+                'gambar' => $request->file('gambar')->store('jurnals', 'public'),
+                'deskripsi' => $request->deskripsi,
+            ]);
+        } else {
+            // Validasi input
+            $request->validate([
+                'judul' => 'required|string|max:255',
+                'gambar' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'deskripsi' => 'required|string',
+            ]);
+    
+            // Buat jurnal baru
+            Jurnal::create([
+                'id_user' => $id_user,
+                'judul' => $request->judul,
+                'gambar' => $request->file('gambar')->store('jurnals', 'public'),
+                'deskripsi' => $request->deskripsi,
+            ]);
+        }
+    
         return redirect()->route('jurnals.index')->with('success', 'Jurnal berhasil ditambahkan.');
     }
 
-    /**
-     * Tampilkan detail jurnal.
-     */
     public function show(Jurnal $jurnal)
-    {
-        // Pastikan hanya jurnal milik user yang sedang login yang dapat dilihat
-        if ($jurnal->id_user != Auth::id()) {
-            return redirect()->route('jurnals.index')->with('error', 'Anda tidak memiliki akses ke jurnal ini.');
-        }
-
-        return view('jurnals.show', compact('jurnal'));
+{
+    // Pastikan hanya jurnal milik user yang sedang login yang dapat dilihat
+    if ($jurnal->id_user != Auth::id()) {
+        return redirect()->route('jurnals.index')->with('error', 'Anda tidak memiliki akses ke jurnal ini.');
     }
 
+    // Ambil jurnal beserta data pengguna yang mengisinya
+    $jurnal->load('user');
+
+    return view('jurnals.show', compact('jurnal'));
+}
     /**
      * Tampilkan formulir edit jurnal.
      */
-    public function edit(Jurnal $jurnal)
-    {
-        if (now()->greaterThan(Carbon::parse($jurnal->created_at)->setTime(15, 0, 0))) {
-            return redirect()->route('jurnals.index')->with('error', 'Jurnal hanya dapat diedit sebelum jam 08:00 pada hari berikutnya.');
-        }
-        return view('jurnals.edit', compact('jurnal'));
-    }
-
-
     /**
-     * Perbarui jurnal dalam database.
-     */
-    public function update(Request $request, Jurnal $jurnal)
-    {
-        if ($jurnal->created_at->format('Y-m-d') != now()->format('Y-m-d') || now()->greaterThan($jurnal->created_at->endOfDay())) {
-            return redirect()->route('jurnals.index')->with('error', 'Jurnal hanya dapat diperbarui sebelum jam 23:59 pada hari yang sama.');
-        }
-    
-        if ($jurnal->id_user != Auth::id()) {
-            return redirect()->route('jurnals.index')->with('error', 'Anda tidak memiliki akses untuk memperbarui jurnal ini.');
-        }
-    
-        // Validasi
-        $request->validate([
-            'judul' => 'required|string|max:255',
-            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'deskripsi' => 'required|string',
-        ]);
-    
-        if ($request->hasFile('gambar')) {
-            Storage::disk('public')->delete($jurnal->gambar);
-            $gambarPath = $request->file('gambar')->store('jurnals', 'public');
-        } else {
-            $gambarPath = $jurnal->gambar;
-        }
-    
-        $jurnal->update([
-            'judul' => $request->judul,
-            'gambar' => $gambarPath,
-            'deskripsi' => $request->deskripsi,
-        ]);
-    
-        return redirect()->route('jurnals.index')->with('success', 'Jurnal berhasil diperbarui.');
+ * Tampilkan formulir edit jurnal.
+ */
+public function edit(Jurnal $jurnal)
+{
+    // Cek apakah jurnal dibuat otomatis
+    if ($jurnal->judul === 'Kosong' && $jurnal->deskripsi === 'Jurnal otomatis dibuat karena tidak ada yang mengisi hari ini.') {
+        return redirect()->route('jurnals.index')->with('error', 'Jurnal otomatis tidak dapat diedit.');
     }
-    
+
+    $batasEdit = Carbon::parse($jurnal->created_at)->addDay()->setTime(10, 0, 0); // Jam 10 pagi besok
+
+    if (now()->greaterThan($batasEdit)) {
+        return redirect()->route('jurnals.index')->with('error', 'Jurnal hanya dapat diedit sebelum jam 10:00 pagi keesokan harinya.');
+    }
+
+    return view('jurnals.edit', compact('jurnal'));
+}
+
+public function update(Request $request, Jurnal $jurnal)
+{
+    // Cek apakah jurnal dibuat otomatis
+    if ($jurnal->judul === 'Kosong' && $jurnal->deskripsi === 'Jurnal otomatis dibuat karena tidak ada yang mengisi hari ini.') {
+        return redirect()->route('jurnals.index')->with('error', 'Jurnal otomatis tidak dapat diperbarui.');
+    }
+
+    $batasEdit = Carbon::parse($jurnal->created_at)->addDay()->setTime(10, 0, 0); // Jam 10 pagi besok
+
+    if (now()->greaterThan($batasEdit)) {
+        return redirect()->route('jurnals.index')->with('error', 'Jurnal hanya dapat diperbarui sebelum jam 10:00 pagi keesokan harinya.');
+    }
+
+    if ($jurnal->id_user != Auth::id()) {
+        return redirect()->route('jurnals.index')->with('error', 'Anda tidak memiliki akses untuk memperbarui jurnal ini.');
+    }
+
+    // Validasi
+    $request->validate([
+        'judul' => 'required|string|max:255',
+        'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        'deskripsi' => 'required|string',
+    ]);
+
+    if ($request->hasFile('gambar')) {
+        Storage::disk('public')->delete($jurnal->gambar);
+        $gambarPath = $request->file('gambar')->store('jurnals', 'public');
+    } else {
+        $gambarPath = $jurnal->gambar;
+    }
+
+    $jurnal->update([
+        'judul' => $request->judul,
+        'gambar' => $gambarPath,
+        'deskripsi' => $request->deskripsi,
+    ]);
+
+    return redirect()->route('jurnals.index')->with('success', 'Jurnal berhasil diperbarui.');
+}
+
+
 
     /**
      * Hapus jurnal dari database.
      */
     public function destroy(Jurnal $jurnal)
     {
-        if (now()->greaterThan(Carbon::parse($jurnal->created_at)->setTime(8, 0, 0))) {
-            return redirect()->route('jurnals.index')->with('error', 'Jurnal hanya dapat dihapus sebelum jam 08:00 pada hari berikutnya.');
-        }
+        // if (now()->greaterThan(Carbon::parse($jurnal->created_at)->setTime(8, 0, 0))) {
+        //     return redirect()->route('jurnals.index')->with('error', 'Jurnal hanya dapat dihapus sebelum jam 08:00 pada hari berikutnya.');
+        // }
 
         Storage::disk('public')->delete($jurnal->gambar);
         $jurnal->delete();
@@ -176,4 +199,4 @@ class JurnalController extends Controller
         return redirect()->route('jurnals.index')->with('success', 'Jurnal berhasil dihapus.');
     }
     
-}
+} 

@@ -12,5 +12,10 @@ class Jurnal extends Model
     protected $table = 'jurnals';
     protected $fillable = ['id_user','judul', 'gambar', 'deskripsi'];
 
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'id_user'); // Pastikan 'user_id' ada di tabel jurnals
+    }
+
  
 }
