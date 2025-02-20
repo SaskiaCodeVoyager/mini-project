@@ -14,6 +14,11 @@ class Tahap extends Model
         return $this->belongsToMany(User::class, 'tahap_user', 'tahap_id', 'id_user');
     }
 
+    public function tahap()
+    {
+        return $this->hasone(Tahap::class);
+    }
+
 }
 
 

@@ -116,8 +116,16 @@
     <span class="ml-3 item-text">Divisi</span>
   </a>
 </li>
+
+<li class="nav-item {{ request()->is('absens*') ? 'active' : '' }}">
+  <a href="{{ route('admin.absen.index') }}" data-toggle="collapse" aria-expanded="false" class="nav-link">
+    <i class="fe fe-check-square fe-16"></i> <!-- Ganti ikon dari 'fe-user' ke 'fe-check-square' -->
+    <span class="ml-3 item-text">Absensi</span>
+  </a>
+</li>
 @endif
 
+@if(auth()->user()->role === 'member')
 <!-- Menu Absensi (Ganti Ikon) -->
 <li class="nav-item {{ request()->is('absens*') ? 'active' : '' }}">
   <a href="{{ route('absens.index') }}" data-toggle="collapse" aria-expanded="false" class="nav-link">
@@ -125,13 +133,9 @@
     <span class="ml-3 item-text">Absensi</span>
   </a>
 </li>
+@endif
 
-<li class="nav-item {{ request()->is('absens*') ? 'active' : '' }}">
-  <a href="{{ route('admin.absen.index') }}" data-toggle="collapse" aria-expanded="false" class="nav-link">
-    <i class="fe fe-check-square fe-16"></i> <!-- Ganti ikon dari 'fe-user' ke 'fe-check-square' -->
-    <span class="ml-3 item-text">Absensi2</span>
-  </a>
-</li>
+
 
 
           <li class="nav-item {{ request()->is('projects*') ? 'active' : '' }}">

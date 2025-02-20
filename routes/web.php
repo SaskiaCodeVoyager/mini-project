@@ -19,6 +19,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/admin/absen', [IzinController::class, 'showAllAbsen'])->name('admin.absen.index');
 });
 
+Route::resource('projects', ProjectController::class);
+
 // Grouping all routes under the auth middleware
 Route::middleware(['auth'])->group(function () {
     
@@ -32,7 +34,8 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('jadpik', JadpikController::class);
 
     // Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
-    
+    // Route::put('/projects/{id}', [ProjectController::class, 'update'])->name('projects.update');
+
     // Divisi routes (CRUD operations)
     Route::get('/divisi', [DivisiController::class, 'index'])->name('divisi.index');
     Route::post('/divisi', [DivisiController::class, 'store'])->name('divisi.store');

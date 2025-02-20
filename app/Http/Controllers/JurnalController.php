@@ -117,7 +117,7 @@ class JurnalController extends Controller
      */
     public function edit(Jurnal $jurnal)
     {
-        if (now()->greaterThan(Carbon::parse($jurnal->created_at)->setTime(8, 0, 0))) {
+        if (now()->greaterThan(Carbon::parse($jurnal->created_at)->setTime(15, 0, 0))) {
             return redirect()->route('jurnals.index')->with('error', 'Jurnal hanya dapat diedit sebelum jam 08:00 pada hari berikutnya.');
         }
         return view('jurnals.edit', compact('jurnal'));
